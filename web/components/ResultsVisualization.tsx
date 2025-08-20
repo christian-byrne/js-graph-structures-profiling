@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  BarChart, Bar, ScatterChart, Scatter
+  BarChart, Bar
 } from 'recharts';
+import { Lightbulb } from 'lucide-react';
 import { BenchmarkResult } from '@/app/page';
 
 interface ResultsVisualizationProps {
@@ -107,21 +108,23 @@ export function ResultsVisualization({ results }: ResultsVisualizationProps) {
         ))}
       </div>
 
-      <div className="bg-white border rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-4">{title} by Node Count</h3>
+      <div className="bg-white/95 backdrop-blur border border-white/20 rounded-2xl p-6 shadow-xl">
+        <h3 className="text-xl font-bold text-gray-800 mb-6">{title} by Node Count</h3>
         
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
+        <ResponsiveContainer width="100%" height={450}>
+          <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis 
               dataKey="n" 
-              label={{ value: 'Node Count', position: 'insideBottom', offset: -10 }}
+              label={{ value: 'Node Count', position: 'insideBottom', offset: -5 }}
+              tick={{ fontSize: 12 }}
             />
             <YAxis 
               label={{ value: unit, angle: -90, position: 'insideLeft' }}
+              tick={{ fontSize: 12 }}
             />
             <Tooltip 
-              formatter={(value: any, name: string) => [
+              formatter={(value: number, name: string) => [
                 `${Number(value).toFixed(2)} ${unit}`,
                 name
               ]}
@@ -144,16 +147,16 @@ export function ResultsVisualization({ results }: ResultsVisualizationProps) {
       </div>
 
       {/* Performance comparison bar chart */}
-      <div className="bg-white border rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-4">Performance Comparison</h3>
+      <div className="bg-white/95 backdrop-blur border border-white/20 rounded-2xl p-6 shadow-xl">
+        <h3 className="text-xl font-bold text-gray-800 mb-6">Performance Comparison</h3>
         
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="n" />
-            <YAxis />
+        <ResponsiveContainer width="100%" height={350}>
+          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="n" tick={{ fontSize: 12 }} />
+            <YAxis tick={{ fontSize: 12 }} />
             <Tooltip 
-              formatter={(value: any, name: string) => [
+              formatter={(value: number, name: string) => [
                 `${Number(value).toFixed(2)} ${unit}`,
                 name
               ]}
@@ -168,8 +171,8 @@ export function ResultsVisualization({ results }: ResultsVisualizationProps) {
       </div>
 
       {/* Summary table */}
-      <div className="bg-white border rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-4">Results Summary</h3>
+      <div className="bg-white/95 backdrop-blur border border-white/20 rounded-2xl p-6 shadow-xl">
+        <h3 className="text-xl font-bold text-gray-800 mb-6">Detailed Results Summary</h3>
         
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -200,29 +203,32 @@ export function ResultsVisualization({ results }: ResultsVisualizationProps) {
       </div>
 
       {/* Analysis insights */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-4 text-blue-900">Analysis Insights</h3>
-        <div className="space-y-2 text-sm text-blue-800">
+      <div className="bg-gradient-to-r from-blue-500/20 to-indigo-500/20 backdrop-blur border border-blue-400/30 rounded-2xl p-6">
+        <h3 className="text-xl font-bold mb-4 text-white flex items-center gap-2">
+          <Lightbulb size={24} className="text-yellow-400" />
+          Algorithm Analysis
+        </h3>
+        <div className="space-y-3 text-sm text-blue-100">
           {activeMetric === 'memory' && (
             <>
-              <div>• <strong>AM (Adjacency Matrix):</strong> Memory grows O(n²), efficient for dense graphs</div>
-              <div>• <strong>AL (Adjacency List):</strong> Memory grows O(n + m), efficient for sparse graphs</div>
-              <div>• <strong>AM+AL:</strong> Combined approach uses most memory but offers flexibility</div>
-              <div>• <strong>OOP:</strong> Object overhead increases memory usage significantly</div>
+              <div className="p-3 bg-black/20 rounded-lg">• <strong>AM (Adjacency Matrix):</strong> Memory grows O(n²), efficient for dense graphs</div>
+              <div className="p-3 bg-black/20 rounded-lg">• <strong>AL (Adjacency List):</strong> Memory grows O(n + m), efficient for sparse graphs</div>
+              <div className="p-3 bg-black/20 rounded-lg">• <strong>AM+AL:</strong> Combined approach uses most memory but offers flexibility</div>
+              <div className="p-3 bg-black/20 rounded-lg">• <strong>OOP:</strong> Object overhead increases memory usage significantly</div>
             </>
           )}
           {activeMetric === 'lookup' && (
             <>
-              <div>• <strong>AM:</strong> O(1) constant time lookups, very fast</div>
-              <div>• <strong>AL:</strong> O(1) average with Sets, good performance</div>
-              <div>• <strong>OOP:</strong> Slower due to method calls and object traversal</div>
+              <div className="p-3 bg-black/20 rounded-lg">• <strong>AM:</strong> O(1) constant time lookups, very fast</div>
+              <div className="p-3 bg-black/20 rounded-lg">• <strong>AL:</strong> O(1) average with Sets, good performance</div>
+              <div className="p-3 bg-black/20 rounded-lg">• <strong>OOP:</strong> Slower due to method calls and object traversal</div>
             </>
           )}
           {(activeMetric === 'traversal-out' || activeMetric === 'traversal-in') && (
             <>
-              <div>• <strong>AM:</strong> O(n) traversal time, gets slower with larger graphs</div>
-              <div>• <strong>AL:</strong> O(degree) traversal time, scales with connectivity</div>
-              <div>• <strong>OOP:</strong> Additional overhead from object method calls</div>
+              <div className="p-3 bg-black/20 rounded-lg">• <strong>AM:</strong> O(n) traversal time, gets slower with larger graphs</div>
+              <div className="p-3 bg-black/20 rounded-lg">• <strong>AL:</strong> O(degree) traversal time, scales with connectivity</div>
+              <div className="p-3 bg-black/20 rounded-lg">• <strong>OOP:</strong> Additional overhead from object method calls</div>
             </>
           )}
         </div>

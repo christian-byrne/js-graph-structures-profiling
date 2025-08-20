@@ -16,21 +16,22 @@ export function BenchmarkRunner({ config, onProgress, onComplete, progress }: Be
   }, [config, onProgress, onComplete]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Running Benchmark...</h3>
-        <div className="text-sm text-slate-600">{Math.round(progress)}%</div>
+    <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold text-white">Running Performance Analysis...</h3>
+        <div className="text-lg font-bold text-blue-300">{Math.round(progress)}%</div>
       </div>
       
-      <div className="w-full bg-slate-200 rounded-full h-3">
+      <div className="w-full bg-black/20 rounded-full h-4 mb-4">
         <div
-          className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+          className="bg-gradient-to-r from-blue-500 to-indigo-500 h-4 rounded-full transition-all duration-300 shadow-lg"
           style={{ width: `${progress}%` }}
         />
       </div>
       
-      <div className="text-sm text-slate-600">
-        Testing {config.sizes.length} different node counts with {config.samples.toLocaleString()} lookup samples each...
+      <div className="text-blue-200 flex items-center justify-between">
+        <span>Testing {config.sizes.length} node configurations...</span>
+        <span>{config.samples.toLocaleString()} samples per test</span>
       </div>
     </div>
   );
