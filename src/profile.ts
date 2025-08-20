@@ -10,7 +10,7 @@ const getArg = (name: string, defaultValue: any) => {
   return arg ? arg.split('=')[1] : defaultValue;
 };
 
-const SIZES = getArg('sizes', '10,50,200,500').split(',').map(n => parseInt(n));
+const SIZES = getArg('sizes', '10,50,200,500').split(',').map((n: string) => parseInt(n));
 const AVG_OUT_DEG = parseInt(getArg('degree', '8'));
 const LOOKUP_SAMPLES = parseInt(getArg('samples', '10000'));   // reduced default
 const TRAVERSAL_REPS = parseInt(getArg('reps', '500'));        // reduced default
@@ -47,7 +47,7 @@ function gcTry() {
       console.warn('GC not available. Run with: node --expose-gc profile.js');
     }
   } catch (e) {
-    console.warn('GC failed:', e.message);
+    console.warn('GC failed:', (e as Error).message);
   }
 }
 
@@ -88,10 +88,10 @@ function randInt(n: number): number { return (Math.random() * n) | 0; }
 // We ensure u < v to keep it DAG-like (acyclic).
 function genEdges(n: number, avgOutDeg: number): Edge[] {
   const m = Math.max(0, Math.floor(n * avgOutDeg));
-  const edges = [];
+  const edges: Edge[] = [];
   for (let i = 0; i < m; i++) {
-    let u = randInt(n - 1);
-    let v = u + 1 + randInt(n - 1 - u); // ensures v > u
+    const u = randInt(n - 1);
+    const v = u + 1 + randInt(n - 1 - u); // ensures v > u
     edges.push([u, v]);
   }
   return edges;
