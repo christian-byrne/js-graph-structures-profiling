@@ -1,9 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  BarChart, Bar
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { Lightbulb } from 'lucide-react';
 import { BenchmarkResult } from '@/app/page';
@@ -12,7 +10,7 @@ interface ResultsVisualizationProps {
   results: BenchmarkResult[];
 }
 
-type MetricType = 'memory' | 'lookup' | 'traversal-out' | 'traversal-in';
+type MetricType = 'memory' | 'lookup' | 'traversal-out' | 'traversal-in' | 'sparsity';
 
 const COLORS = {
   'AM': '#3B82F6',     // Blue
@@ -22,7 +20,6 @@ const COLORS = {
 };
 
 export function ResultsVisualization({ results }: ResultsVisualizationProps) {
-  const [activeMetric, setActiveMetric] = useState<MetricType>('memory');
 
   const getChartData = (metricType: MetricType) => {
     return results.map(result => {
@@ -61,67 +58,34 @@ export function ResultsVisualization({ results }: ResultsVisualizationProps) {
             'AM+AL': result['ns/op traverseIn AM+AL'],
             'OOP': result['ns/op traverseIn OOP']
           };
+        case 'sparsity':
+          return {
+            ...base,
+            'Sparsity': result.sparsity
+          };
       }
     });
   };
 
-  const getMetricUnit = (metricType: MetricType) => {
-    switch (metricType) {
-      case 'memory': return 'MB';
-      default: return 'ns/op';
-    }
-  };
 
-  const getMetricTitle = (metricType: MetricType) => {
-    switch (metricType) {
-      case 'memory': return 'Memory Usage';
-      case 'lookup': return 'Lookup Performance (hasEdge)';
-      case 'traversal-out': return 'Output Traversal Performance';
-      case 'traversal-in': return 'Input Traversal Performance';
-    }
-  };
-
-  const chartData = getChartData(activeMetric);
-  const unit = getMetricUnit(activeMetric);
-  const title = getMetricTitle(activeMetric);
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap gap-2">
-        {[
-          { key: 'memory' as MetricType, label: 'Memory Usage' },
-          { key: 'lookup' as MetricType, label: 'Lookup Speed' },
-          { key: 'traversal-out' as MetricType, label: 'Output Traversal' },
-          { key: 'traversal-in' as MetricType, label: 'Input Traversal' },
-        ].map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setActiveMetric(key)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              activeMetric === key
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <div className="bg-white/95 backdrop-blur border border-white/20 rounded-2xl p-6 shadow-xl">
-        <h3 className="text-xl font-bold text-gray-800 mb-6">{title} by Node Count</h3>
+  const renderChart = (metricType: MetricType, title: string, unit: string) => {
+    const chartData = getChartData(metricType);
+    
+    return (
+      <div className="bg-white/95 backdrop-blur border border-white/20 rounded-2xl p-4 shadow-xl">
+        <h3 className="text-lg font-bold text-gray-800 mb-4">{title}</h3>
         
-        <ResponsiveContainer width="100%" height={450}>
-          <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 40 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis 
               dataKey="n" 
-              label={{ value: 'Node Count', position: 'insideBottom', offset: -5 }}
-              tick={{ fontSize: 12 }}
+              label={{ value: 'Nodes', position: 'insideBottom', offset: -5 }}
+              tick={{ fontSize: 10 }}
             />
             <YAxis 
               label={{ value: unit, angle: -90, position: 'insideLeft' }}
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 10 }}
             />
             <Tooltip 
               formatter={(value: number, name: string) => [
@@ -132,42 +96,42 @@ export function ResultsVisualization({ results }: ResultsVisualizationProps) {
             />
             <Legend />
             
-            {Object.entries(COLORS).map(([key, color]) => (
+            {metricType === 'sparsity' ? (
               <Line
-                key={key}
+                key="Sparsity"
                 type="monotone"
-                dataKey={key}
-                stroke={color}
+                dataKey="Sparsity"
+                stroke="#6366F1"
                 strokeWidth={2}
-                dot={{ r: 4 }}
+                dot={{ r: 3 }}
               />
-            ))}
+            ) : (
+              Object.entries(COLORS).map(([key, color]) => (
+                <Line
+                  key={key}
+                  type="monotone"
+                  dataKey={key}
+                  stroke={color}
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                />
+              ))
+            )}
           </LineChart>
         </ResponsiveContainer>
       </div>
+    );
+  };
 
-      {/* Performance comparison bar chart */}
-      <div className="bg-white/95 backdrop-blur border border-white/20 rounded-2xl p-6 shadow-xl">
-        <h3 className="text-xl font-bold text-gray-800 mb-6">Performance Comparison</h3>
-        
-        <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis dataKey="n" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip 
-              formatter={(value: number, name: string) => [
-                `${Number(value).toFixed(2)} ${unit}`,
-                name
-              ]}
-            />
-            <Legend />
-            
-            {Object.entries(COLORS).map(([key, color]) => (
-              <Bar key={key} dataKey={key} fill={color} />
-            ))}
-          </BarChart>
-        </ResponsiveContainer>
+  return (
+    <div className="space-y-6">
+      {/* All 5 charts in a responsive grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {renderChart('memory', 'Memory Usage', 'MB')}
+        {renderChart('lookup', 'Lookup Performance', 'ns/op')}
+        {renderChart('traversal-out', 'Output Traversal', 'ns/op')}
+        {renderChart('traversal-in', 'Input Traversal', 'ns/op')}
+        {renderChart('sparsity', 'Graph Sparsity', '%')}
       </div>
 
       {/* Summary table */}
@@ -177,24 +141,34 @@ export function ResultsVisualization({ results }: ResultsVisualizationProps) {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b">
-                <th className="text-left py-2">Nodes</th>
-                <th className="text-left py-2">Edges</th>
-                <th className="text-left py-2" style={{color: COLORS.AM}}>AM</th>
-                <th className="text-left py-2" style={{color: COLORS.AL}}>AL</th>
-                <th className="text-left py-2" style={{color: COLORS['AM+AL']}}>AM+AL</th>
-                <th className="text-left py-2" style={{color: COLORS.OOP}}>OOP</th>
+              <tr className="border-b border-gray-300">
+                <th className="text-left py-2 text-gray-900 font-semibold">Nodes</th>
+                <th className="text-left py-2 text-gray-900 font-semibold">Edges</th>
+                <th className="text-left py-2 text-gray-900 font-semibold">Sparsity (%)</th>
+                <th className="text-left py-2 font-semibold" style={{color: COLORS.AM}}>Memory AM (MB)</th>
+                <th className="text-left py-2 font-semibold" style={{color: COLORS.AL}}>Memory AL (MB)</th>
+                <th className="text-left py-2 font-semibold" style={{color: COLORS['AM+AL']}}>Memory AM+AL (MB)</th>
+                <th className="text-left py-2 font-semibold" style={{color: COLORS.OOP}}>Memory OOP (MB)</th>
+                <th className="text-left py-2 font-semibold" style={{color: COLORS.AM}}>Lookup AM (ns/op)</th>
+                <th className="text-left py-2 font-semibold" style={{color: COLORS.AL}}>Lookup AL (ns/op)</th>
+                <th className="text-left py-2 font-semibold" style={{color: COLORS['AM+AL']}}>Lookup AM+AL (ns/op)</th>
+                <th className="text-left py-2 font-semibold" style={{color: COLORS.OOP}}>Lookup OOP (ns/op)</th>
               </tr>
             </thead>
             <tbody>
-              {chartData.map((row, i) => (
-                <tr key={i} className="border-b">
-                  <td className="py-2 font-medium">{row.n}</td>
-                  <td className="py-2">{row.edges}</td>
-                  <td className="py-2">{Number(row.AM).toFixed(2)} {unit}</td>
-                  <td className="py-2">{Number(row.AL).toFixed(2)} {unit}</td>
-                  <td className="py-2">{Number(row['AM+AL']).toFixed(2)} {unit}</td>
-                  <td className="py-2">{Number(row.OOP).toFixed(2)} {unit}</td>
+              {results.map((result, i) => (
+                <tr key={i} className="border-b border-gray-200">
+                  <td className="py-2 font-medium text-gray-900">{result.n}</td>
+                  <td className="py-2 text-gray-900">{result.edges}</td>
+                  <td className="py-2 text-gray-900">{result.sparsity}%</td>
+                  <td className="py-2 text-gray-900">{result['MB: AM'].toFixed(3)}</td>
+                  <td className="py-2 text-gray-900">{result['MB: AL'].toFixed(3)}</td>
+                  <td className="py-2 text-gray-900">{result['MB: AM+AL'].toFixed(3)}</td>
+                  <td className="py-2 text-gray-900">{result['MB: OOP'].toFixed(3)}</td>
+                  <td className="py-2 text-gray-900">{result['ns/op hasEdge AM'].toFixed(1)}</td>
+                  <td className="py-2 text-gray-900">{result['ns/op hasEdge AL'].toFixed(1)}</td>
+                  <td className="py-2 text-gray-900">{result['ns/op hasEdge AM+AL'].toFixed(1)}</td>
+                  <td className="py-2 text-gray-900">{result['ns/op hasEdge OOP'].toFixed(1)}</td>
                 </tr>
               ))}
             </tbody>
@@ -208,29 +182,25 @@ export function ResultsVisualization({ results }: ResultsVisualizationProps) {
           <Lightbulb size={24} className="text-yellow-400" />
           Algorithm Analysis
         </h3>
-        <div className="space-y-3 text-sm text-blue-100">
-          {activeMetric === 'memory' && (
-            <>
-              <div className="p-3 bg-black/20 rounded-lg">• <strong>AM (Adjacency Matrix):</strong> Memory grows O(n²), efficient for dense graphs</div>
-              <div className="p-3 bg-black/20 rounded-lg">• <strong>AL (Adjacency List):</strong> Memory grows O(n + m), efficient for sparse graphs</div>
-              <div className="p-3 bg-black/20 rounded-lg">• <strong>AM+AL:</strong> Combined approach uses most memory but offers flexibility</div>
-              <div className="p-3 bg-black/20 rounded-lg">• <strong>OOP:</strong> Object overhead increases memory usage significantly</div>
-            </>
-          )}
-          {activeMetric === 'lookup' && (
-            <>
-              <div className="p-3 bg-black/20 rounded-lg">• <strong>AM:</strong> O(1) constant time lookups, very fast</div>
-              <div className="p-3 bg-black/20 rounded-lg">• <strong>AL:</strong> O(1) average with Sets, good performance</div>
-              <div className="p-3 bg-black/20 rounded-lg">• <strong>OOP:</strong> Slower due to method calls and object traversal</div>
-            </>
-          )}
-          {(activeMetric === 'traversal-out' || activeMetric === 'traversal-in') && (
-            <>
-              <div className="p-3 bg-black/20 rounded-lg">• <strong>AM:</strong> O(n) traversal time, gets slower with larger graphs</div>
-              <div className="p-3 bg-black/20 rounded-lg">• <strong>AL:</strong> O(degree) traversal time, scales with connectivity</div>
-              <div className="p-3 bg-black/20 rounded-lg">• <strong>OOP:</strong> Additional overhead from object method calls</div>
-            </>
-          )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-100">
+          <div>
+            <h4 className="font-semibold mb-2 text-yellow-300">Memory Characteristics</h4>
+            <div className="space-y-2">
+              <div className="p-2 bg-black/20 rounded-lg">• <strong>AM:</strong> O(n²) space, efficient for dense graphs</div>
+              <div className="p-2 bg-black/20 rounded-lg">• <strong>AL:</strong> O(n + m) space, efficient for sparse graphs</div>
+              <div className="p-2 bg-black/20 rounded-lg">• <strong>AM+AL:</strong> Combined approach, highest memory usage</div>
+              <div className="p-2 bg-black/20 rounded-lg">• <strong>OOP:</strong> Object overhead significantly increases memory</div>
+            </div>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-2 text-yellow-300">Performance Characteristics</h4>
+            <div className="space-y-2">
+              <div className="p-2 bg-black/20 rounded-lg">• <strong>Lookup:</strong> AM has O(1) constant time, fastest</div>
+              <div className="p-2 bg-black/20 rounded-lg">• <strong>Traversal:</strong> AL is O(degree), AM is O(n)</div>
+              <div className="p-2 bg-black/20 rounded-lg">• <strong>Sparsity:</strong> &lt;1% sparse favors AL, &gt;10% dense favors AM</div>
+              <div className="p-2 bg-black/20 rounded-lg">• <strong>OOP:</strong> Method call overhead impacts all operations</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

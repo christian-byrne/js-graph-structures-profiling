@@ -1,0 +1,36 @@
+{
+  "name": "graph-profiling",
+  "version": "1.0.0",
+  "description": "Performance benchmarking for graph data structures: Adjacency Matrix (AM) vs Adjacency List (AL) vs OOP implementations",
+  "main": "dist/profile.js",
+  "scripts": {
+    "build": "tsc",
+    "clean:dist": "rm -rf dist/",
+    "clean:results": "rm -rf benchmark-results/",
+    "clean": "npm run clean:dist && npm run clean:results",
+    "benchmark": "npm run build && node --expose-gc dist/profile.js",
+    "benchmark:quick": "npm run build && node --expose-gc dist/profile.js --sizes=\"10,50\" --samples=1000 --reps=100",
+    "benchmark:test": "npm run build && node --expose-gc dist/profile.js --sizes=\"10,50,200\" --samples=5000 --reps=200",
+    "visualize": "npm run build && node dist/visualize.js",
+    "dev": "npm run build && npm run benchmark && npm run visualize",
+    "all": "npm run clean && npm run dev"
+  },
+  "keywords": [
+    "graph",
+    "adjacency-matrix",
+    "adjacency-list",
+    "performance",
+    "benchmark",
+    "data-structures",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

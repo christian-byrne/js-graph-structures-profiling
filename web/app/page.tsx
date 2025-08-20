@@ -9,6 +9,7 @@ import { AlgorithmCard } from '@/components/AlgorithmCard';
 import { ConfigurationPanel } from '@/components/ConfigurationPanel';
 import { PerformanceInsights } from '@/components/PerformanceInsights';
 import { ComplexityReference } from '@/components/ComplexityReference';
+import { runRealBenchmark } from '@/lib/benchmark';
 
 export interface BenchmarkConfig {
   sizes: number[];
@@ -20,6 +21,7 @@ export interface BenchmarkConfig {
 export interface BenchmarkResult {
   n: number;
   edges: number;
+  sparsity: number;
   'MB: AM': number;
   'MB: AL': number;
   'MB: AM+AL': number;
@@ -58,7 +60,7 @@ export default function Home() {
     setResults([]);
     
     try {
-      const benchmarkResults = await runBenchmark(config, (p) => setProgress(p));
+      const benchmarkResults = await runRealBenchmark(config, (p) => setProgress(p));
       setResults(benchmarkResults);
     } catch (error) {
       console.error('Benchmark failed:', error);
@@ -261,45 +263,4 @@ const hasEdge = (u, v) =>
       </div>
     </main>
   );
-}
-
-// Mock benchmark function - replace with actual implementation
-async function runBenchmark(
-  config: BenchmarkConfig, 
-  onProgress: (progress: number) => void
-): Promise<BenchmarkResult[]> {
-  // This will be replaced with actual benchmark logic
-  const results: BenchmarkResult[] = [];
-  
-  for (let i = 0; i < config.sizes.length; i++) {
-    onProgress((i / config.sizes.length) * 100);
-    
-    // Simulate work
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const n = config.sizes[i];
-    results.push({
-      n,
-      edges: n * config.degree,
-      'MB: AM': Math.random() * 10,
-      'MB: AL': Math.random() * 5,
-      'MB: AM+AL': Math.random() * 12,
-      'MB: OOP': Math.random() * 8,
-      'ns/op hasEdge AM': Math.random() * 100,
-      'ns/op hasEdge AL': Math.random() * 50,
-      'ns/op hasEdge AM+AL': Math.random() * 75,
-      'ns/op hasEdge OOP': Math.random() * 150,
-      'ns/op traverseOut AM': Math.random() * 200,
-      'ns/op traverseOut AL': Math.random() * 100,
-      'ns/op traverseOut AM+AL': Math.random() * 150,
-      'ns/op traverseOut OOP': Math.random() * 300,
-      'ns/op traverseIn AM': Math.random() * 200,
-      'ns/op traverseIn AL': Math.random() * 100,
-      'ns/op traverseIn AM+AL': Math.random() * 150,
-      'ns/op traverseIn OOP': Math.random() * 300,
-    });
-  }
-  
-  onProgress(100);
-  return results;
 }
